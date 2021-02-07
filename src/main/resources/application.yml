@@ -2,6 +2,10 @@
 spring:
   main:
     banner-mode: off
+    web-application-type: none
 logging:
   level:
     root: info
+    '[org.springframework]': warn
+    '[com.github.dbranco.jaguar]': warn
+    '[com.github.dbranco.jaguar.subcommands]': info

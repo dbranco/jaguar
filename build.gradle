@@ -11,8 +11,14 @@ repositories {
   mavenCentral()
 }
 
+ext {
+    imageDirPath = "$buildDir/jaguar-image"
+    imageZipPath = "$buildDir/image-zip/jaguar-image.zip"
+}
+
 dependencies {
   implementation 'org.springframework.boot:spring-boot-starter'
+  implementation 'org.springframework.boot:spring-boot-starter-webflux'
   implementation 'info.picocli:picocli:4.6.1'
 
   developmentOnly 'org.springframework.boot:spring-boot-devtools'
@@ -23,3 +29,21 @@ dependencies {
 test {
   useJUnitPlatform()
 }
+
+task deleteOutputImage(type: Delete) {
+    delete "${buildDir}/jaguar-image"
+}
+
+task jPackage(type: Exec) {
+    commandLine 'cmd', '/c', 'jpackage',
+          '--type', 'app-image',
+          '--name', 'jaguar',
+          '--input', jar.destinationDirectory.asFile.get(),
+          '--dest', "${buildDir}/jaguar-image",
+          '--main-jar', jar.archiveFileName.get(),
+          '--win-console'
+    environment << [JPACKAGE_DEBUG: true]
+}
+
+jPackage.dependsOn(deleteOutputImage)
+assemble.dependsOn(jPackage)

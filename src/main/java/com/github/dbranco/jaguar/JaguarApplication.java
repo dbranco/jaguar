@@ -9,6 +9,7 @@ import picocli.CommandLine;
 
 @SpringBootApplication
 public class JaguarApplication implements CommandLineRunner {
+  
   @Autowired
   private JaguarCommand mainCommand;
   
@@ -18,6 +19,7 @@ public class JaguarApplication implements CommandLineRunner {
       .execute(args);
 
   }
+  
   public static void main(String[] args) {
     SpringApplication.run(JaguarApplication.class, args);
   }

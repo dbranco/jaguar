@@ -4,7 +4,9 @@ import com.github.dbranco.jaguar.subcommands.JaguarList;
 
 import org.springframework.stereotype.Component;
 
+import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 @Command(
     name = "jaguar", version = "1.0.0",
@@ -16,9 +18,13 @@ import picocli.CommandLine.Command;
 @Component
 public class JaguarCommand implements Runnable {
 
+    @Option(names = {"-h", "--help"}, usageHelp = true)
+    private boolean help;
+
     @Override
     public void run() {
-        System.out.println("Hello From Jaguar");
+        CommandLine cmd = new CommandLine(this);
+        cmd.usage(System.out);
     }
     
 }
