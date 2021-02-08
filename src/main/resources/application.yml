@@ -5,7 +5,7 @@ spring:
     web-application-type: none
 logging:
   level:
-    root: info
+    root: warn
     '[org.springframework]': warn
     '[com.github.dbranco.jaguar]': warn
     '[com.github.dbranco.jaguar.subcommands]': info

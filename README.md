@@ -6,7 +6,7 @@ Digging around I haven't been able to find a solution that satisfies me. So I de
 
 The project is intended to create a full package deliverable that can list, download and configures the JDK to be used.
 
-This project will also to help me to practice a little about some concepts, like using Spring+SpringBoot, gradle for build, using jpackage to create a deliverable, etc...
+This project will also help me to practice a little about some concepts, like using Spring+SpringBoot, gradle for build, using jpackage to create a deliverable, etc...
 
 ## Dependencies for development
 I am trying to have this project with less dependencies needed as possible, but since I am using jpackage you will require at least to have a JDK with this tool (JDK 14).
