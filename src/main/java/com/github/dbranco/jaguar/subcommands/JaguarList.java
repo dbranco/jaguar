@@ -1,15 +1,10 @@
 package com.github.dbranco.jaguar.subcommands;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 import com.github.dbranco.jaguar.service.JdkListLocalService;
 import com.github.dbranco.jaguar.service.JdkListRemoteService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -30,21 +25,17 @@ public class JaguarList implements Runnable {
     private JdkListRemoteService remote;
 
     public void run() {
-        
+
         if ("".equalsIgnoreCase(type)) {
             local.list();
             return;
-        }else if ("available".equalsIgnoreCase(type)) {
+        } else if ("available".equalsIgnoreCase(type)) {
             remote.list();
             return;
         }
-        
+
         CommandLine cmd = new CommandLine(this);
         cmd.usage(System.out);
     }
 
-    
-
-    
-    
 }

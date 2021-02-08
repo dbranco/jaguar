@@ -9,3 +9,6 @@ logging:
     '[org.springframework]': warn
     '[com.github.dbranco.jaguar]': warn
     '[com.github.dbranco.jaguar.subcommands]': info
+jaguar:
+  list:
+    url: "https://raw.githubusercontent.com/dbranco/jaguar/b1d8d70deac047524b0fc24a425f6d13f62a0c22/src/main/resources/list.json"
