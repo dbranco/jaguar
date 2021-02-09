@@ -1,15 +1,19 @@
 package com.github.dbranco.jaguar;
 
+import com.github.dbranco.jaguar.config.JaguarConfigurationProperties;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 import picocli.CommandLine;
 import picocli.CommandLine.IFactory;
 
 @SpringBootApplication
+@EnableConfigurationProperties(JaguarConfigurationProperties.class)
 public class JaguarApplication implements CommandLineRunner, ExitCodeGenerator {
 
   @Autowired

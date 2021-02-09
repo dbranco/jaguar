@@ -22,7 +22,9 @@ dependencies {
   implementation 'info.picocli:picocli-spring-boot-starter:4.6.1'
 
   compileOnly 'org.projectlombok:lombok'
+  
   annotationProcessor 'org.projectlombok:lombok'
+  annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 
   developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
@@ -50,3 +52,5 @@ task jPackage(type: Exec) {
 
 jPackage.dependsOn(deleteOutputImage)
 assemble.dependsOn(jPackage)
+
+compileJava.inputs.files(processResources)
