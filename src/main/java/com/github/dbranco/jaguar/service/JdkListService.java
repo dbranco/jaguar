@@ -1,15 +1,29 @@
 package com.github.dbranco.jaguar.service;
 
+import java.util.List;
+
 /**
  * The service used to list the JDKs
  */
-public interface JdkListService {
+public interface JdkListService<T> {
     
     /**
-     * List the JDKs
+     * Fetch the JDKs list
      */
-    default void list() {
-        throw new UnsupportedOperationException();
+    List<T> list();
+
+    /**
+     * Print the list to the console
+     * 
+     * @param theOutputToRender the list to be printed
+     */
+    void print(List<T> theOutputToRender);
+
+    /**
+     * Fetch the JDKs list and print it out.
+     */
+    default void listAndPrint() {
+        print(list());
     }
 
 }
