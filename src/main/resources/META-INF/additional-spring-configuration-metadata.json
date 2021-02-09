@@ -1,0 +1,5 @@
+{"properties": [{
+  "name": "jaguar.list.url",
+  "type": "java.lang.String",
+  "description": "The URL from where the list.json is retrieved"
+}]}

@@ -5,7 +5,10 @@ spring:
     web-application-type: none
 logging:
   level:
-    root: info
+    root: warn
     '[org.springframework]': warn
     '[com.github.dbranco.jaguar]': warn
     '[com.github.dbranco.jaguar.subcommands]': info
+jaguar:
+  list:
+    url: "https://raw.githubusercontent.com/dbranco/jaguar/main/src/main/resources/list.json"
