@@ -34,14 +34,14 @@ public class JdkListRemoteService implements JdkListService<JdkClassification> {
     }
 
     public List<JdkClassification> list() {
-        WebClient client = WebClient.builder().baseUrl(listProperties.getUrl()).build();
+        WebClient aClient = WebClient.builder().baseUrl(listProperties.getUrl()).build();
 
-        String bodyToMono = client.get().retrieve().bodyToMono(String.class).block();
+        String aListJson = aClient.get().retrieve().bodyToMono(String.class).block();
         ObjectMapper objectMapper = new ObjectMapper();
 
         List<JdkClassification> allJdksAvailable = Collections.emptyList();
         try {
-            allJdksAvailable = objectMapper.readValue(bodyToMono, new TypeReference<>() {
+            allJdksAvailable = objectMapper.readValue(aListJson, new TypeReference<>() {
                 @Override
                 public Type getType() {
                     return new ParameterizedTypeReference<List<JdkClassification>>() {

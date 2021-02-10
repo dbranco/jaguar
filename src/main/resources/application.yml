@@ -8,7 +8,7 @@ logging:
     root: warn
     '[org.springframework]': warn
     '[com.github.dbranco.jaguar]': warn
-    '[com.github.dbranco.jaguar.subcommands]': info
+    '[com.github.dbranco.jaguar.*]': info
 jaguar:
   list:
     url: "https://raw.githubusercontent.com/dbranco/jaguar/main/src/main/resources/list.json"

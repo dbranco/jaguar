@@ -1,6 +1,7 @@
 package com.github.dbranco.jaguar.subcommands;
 
 import com.github.dbranco.jaguar.service.JdkInstallationService;
+import com.github.dbranco.jaguar.service.JdkInstallationService.InstallationParameter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -23,9 +24,9 @@ public class JaguarInstall implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("Should download the version required.");
         // FIXME need to take into account the architecture and provider
-        installService.install("", version, "");
+        var allParameters = new InstallationParameter("windows", "x64", "", version);
+        installService.install(allParameters);
     }
 
 }
