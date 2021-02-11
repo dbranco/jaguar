@@ -8,6 +8,7 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,6 +32,8 @@ import reactor.core.publisher.Mono;
 public class JdkInstallationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkListRemoteService.class);
+
+    private static final double MEGA_BYTES = Math.pow(1024, 2);
 
     @Autowired
     JdkListRemoteService remoteList;
@@ -58,11 +61,13 @@ public class JdkInstallationService {
 		}
 	}
 
-    private Mono<Void> write(Publisher<DataBuffer> source, Path destination, OpenOption... options) {
+    private Mono<Void> write(Publisher<DataBuffer> source, int theFileSize, Path destination, OpenOption... options) {
 		Assert.notNull(source, "Source must not be null");
 		Assert.notNull(destination, "Destination must not be null");
 
-		Set<OpenOption> optionSet = createFileOptions();
+		var optionSet = createFileOptions();
+        var currentDownloadedSize = new AtomicLong(0);
+        var consoleHelper = new ConsoleHelper();
 
 		return Mono.create(sink -> {
 			try {
@@ -71,7 +76,9 @@ public class JdkInstallationService {
 				DataBufferUtils.write(source, channel).subscribe(
                     // TODO Do some process to update the console output
                     someBufferInput -> {
-                        System.out.println(someBufferInput);
+                        var currentDownloadedSizeMB = currentDownloadedSize.addAndGet(someBufferInput.capacity())/MEGA_BYTES;                        
+                        var currentPercentage = Double.valueOf((currentDownloadedSizeMB*100)/theFileSize).intValue();
+                        consoleHelper.animate(String.valueOf(currentPercentage) + "% - " + theFileSize + "MB");
                         DataBufferUtils.release(someBufferInput);
                     },
 					sink::error,
@@ -83,8 +90,6 @@ public class JdkInstallationService {
 		});
 	}
 
-    
-
     private void downloadArchive(JdkArchive aArchive) {
         WebClient aClient = WebClient.builder()
             .baseUrl(aArchive.getUrl())
@@ -92,9 +97,15 @@ public class JdkInstallationService {
         
             
         var aFileToDownload = aArchive.getUrl().substring(aArchive.getUrl().lastIndexOf("/") + 1);
+        var aFileSize = aClient.head()
+            .retrieve()
+            .toEntity(String.class)
+            .map(aResponse -> aResponse.getHeaders().getContentLength()/MEGA_BYTES)
+            .block();
+
         var aDataBuffer = aClient.get().retrieve().bodyToFlux(DataBuffer.class);
         var aPath = FileSystems.getDefault().getPath(aFileToDownload);
-        write(aDataBuffer, aPath, StandardOpenOption.CREATE)
+        write(aDataBuffer, Double.valueOf(aFileSize).intValue(), aPath, StandardOpenOption.CREATE)
             // TODO extract the downloaded file in here
             .doAfterTerminate(() -> System.out.println("Extracting the file"))
             .block(); //Creates new file or overwrites exisiting file
@@ -121,4 +132,41 @@ public class JdkInstallationService {
         private final String version;
     }
     
+    private class ConsoleHelper {
+        private String lastLine = "";
+    
+        public void print(String line) {
+            //clear the last line if longer
+            if (lastLine.length() > line.length()) {
+                String temp = "";
+                for (int i = 0; i < lastLine.length(); i++) {
+                    temp += " ";
+                }
+                if (temp.length() > 1)
+                    System.out.print("\r" + temp);
+            }
+            System.out.print("\r" + line);
+            lastLine = line;
+        }
+    
+        private byte anim;
+    
+        public void animate(String line) {
+            switch (anim) {
+                case 1:
+                    print("[ \\ ] " + line);
+                    break;
+                case 2:
+                    print("[ | ] " + line);
+                    break;
+                case 3:
+                    print("[ / ] " + line);
+                    break;
+                default:
+                    anim = 0;
+                    print("[ - ] " + line);
+            }
+            anim++;
+        }
+    }
 }
