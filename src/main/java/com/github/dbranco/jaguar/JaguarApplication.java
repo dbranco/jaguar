@@ -8,6 +8,7 @@ import org.springframework.boot.ExitCodeGenerator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 
 import picocli.CommandLine;
 import picocli.CommandLine.IFactory;
@@ -37,6 +38,12 @@ public class JaguarApplication implements CommandLineRunner, ExitCodeGenerator {
   public static void main(String[] args) {
     // let Spring instantiate and inject dependencies
     System.exit(SpringApplication.exit(SpringApplication.run(JaguarApplication.class, args)));
+  }
+
+  @Bean
+  public String appDirectory() {
+    String appDirectory = System.getProperty("appDirectory");
+    return appDirectory == null ? "./bin" : appDirectory;
   }
 
 }

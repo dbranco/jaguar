@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.github.dbranco.jaguar.component.DecompressJdkProcess;
 import com.github.dbranco.jaguar.model.JdkClassification;
 import com.github.dbranco.jaguar.model.JdkClassification.JdkArchive;
 
@@ -32,11 +33,17 @@ import reactor.core.publisher.Mono;
 public class JdkInstallationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkListRemoteService.class);
-
     private static final double MEGA_BYTES = Math.pow(1024, 2);
+    private static final String TMP_DIRECTORY = "tmp";
 
     @Autowired
-    JdkListRemoteService remoteList;
+    private String appDirectory;
+
+    @Autowired
+    private JdkListRemoteService remoteList;
+
+    @Autowired
+    private DecompressJdkProcess decompressor;
 
     private boolean matchParameters(JdkClassification theJdkClassification, InstallationParameter theParameters) {
         return theJdkClassification.getOs().equalsIgnoreCase(theParameters.getOs())
@@ -61,9 +68,9 @@ public class JdkInstallationService {
 		}
 	}
 
-    private Mono<Void> write(Publisher<DataBuffer> source, int theFileSize, Path destination, OpenOption... options) {
-		Assert.notNull(source, "Source must not be null");
-		Assert.notNull(destination, "Destination must not be null");
+    private Mono<Void> write(Publisher<DataBuffer> theSource, int theFileSize, Path theDestination) {
+		Assert.notNull(theSource, "Source must not be null");
+		Assert.notNull(theDestination, "Destination must not be null");
 
 		var optionSet = createFileOptions();
         var currentDownloadedSize = new AtomicLong(0);
@@ -71,9 +78,9 @@ public class JdkInstallationService {
 
 		return Mono.create(sink -> {
 			try {
-				AsynchronousFileChannel channel = AsynchronousFileChannel.open(destination, optionSet, null);
+				AsynchronousFileChannel channel = AsynchronousFileChannel.open(theDestination, optionSet, null);
 				sink.onDispose(() -> closeChannel(channel));
-				DataBufferUtils.write(source, channel).subscribe(
+				DataBufferUtils.write(theSource, channel).subscribe(
                     // TODO Do some process to update the console output
                     someBufferInput -> {
                         var currentDownloadedSizeMB = currentDownloadedSize.addAndGet(someBufferInput.capacity())/MEGA_BYTES;                        
@@ -90,6 +97,13 @@ public class JdkInstallationService {
 		});
 	}
 
+    private void createTmpFolderIfNeeded() {
+        var aPath = FileSystems.getDefault().getPath(appDirectory, TMP_DIRECTORY);
+        if (!(aPath.toFile().exists() || aPath.toFile().isDirectory())) {
+            aPath.toFile().mkdirs();
+        }
+    }
+
     private void downloadArchive(JdkArchive aArchive) {
         WebClient aClient = WebClient.builder()
             .baseUrl(aArchive.getUrl())
@@ -104,9 +118,11 @@ public class JdkInstallationService {
             .block();
 
         var aDataBuffer = aClient.get().retrieve().bodyToFlux(DataBuffer.class);
-        var aPath = FileSystems.getDefault().getPath(aFileToDownload);
-        write(aDataBuffer, Double.valueOf(aFileSize).intValue(), aPath, StandardOpenOption.CREATE)
-            // TODO extract the downloaded file in here
+        var aPath = FileSystems.getDefault().getPath(appDirectory, TMP_DIRECTORY, aFileToDownload);
+
+        createTmpFolderIfNeeded();
+
+        write(aDataBuffer, Double.valueOf(aFileSize).intValue(), aPath)
             .doAfterTerminate(() -> System.out.println("Extracting the file"))
             .block(); //Creates new file or overwrites exisiting file
     }

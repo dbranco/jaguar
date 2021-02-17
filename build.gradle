@@ -20,6 +20,7 @@ dependencies {
   implementation 'org.springframework.boot:spring-boot-starter'
   implementation 'org.springframework.boot:spring-boot-starter-webflux'
   implementation 'info.picocli:picocli-spring-boot-starter:4.6.1'
+  implementation 'org.apache.commons:commons-compress:1.20'
 
   compileOnly 'org.projectlombok:lombok'
   
@@ -40,17 +41,17 @@ task deleteOutputImage(type: Delete) {
 }
 
 task jPackage(type: Exec) {
+    dependsOn(deleteOutputImage)
     commandLine 'cmd', '/c', 'jpackage',
           '--type', 'app-image',
           '--name', 'jaguar',
           '--input', jar.destinationDirectory.asFile.get(),
           '--dest', "${buildDir}/jaguar-image",
+          '--java-options', "-DappDirectory=\$APPDIR",
           '--main-jar', jar.archiveFileName.get(),
           '--win-console'
-    environment << [JPACKAGE_DEBUG: true]
 }
 
-jPackage.dependsOn(deleteOutputImage)
 assemble.dependsOn(jPackage)
 
 compileJava.inputs.files(processResources)
