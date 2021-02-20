@@ -5,7 +5,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
@@ -14,12 +16,16 @@ import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DecompressJdkProcess {
+public class ExtractJdkProcess {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(DecompressJdkProcess.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ExtractJdkProcess.class);
+
+  @Autowired
+  private Path jdkInstallationFolder;
 
   /**
    * This method is used to get the tar file name from the gz file by removing the
@@ -28,7 +34,7 @@ public class DecompressJdkProcess {
    * @param theInputFile
    * @param theOutputFolder
    */
-  public void getFileName(File theInputFile, String theOutputFolder) {
+  public void extract(File theInputFile) {
 
     try (InputStream aSourceFileInputStream = Files.newInputStream(theInputFile.toPath());
         ArchiveInputStream aArchiveInputStream = new ArchiveStreamFactory()
@@ -40,8 +46,8 @@ public class DecompressJdkProcess {
           LOGGER.warn("There are an element ({}) that can't be read", aArchiveEntry.getName());
           continue;
         }
-        String aDestinationFilename = theOutputFolder + aArchiveEntry.getName();
-        File aOutputFile = new File(aDestinationFilename);
+
+        var aOutputFile = FileSystems.getDefault().getPath(jdkInstallationFolder.toString(), aArchiveEntry.getName()).toFile();
         if (aArchiveEntry.isDirectory()) {
           if (!aOutputFile.isDirectory() && !aOutputFile.mkdirs()) {
             throw new IOException("Failed to create directory " + aOutputFile);

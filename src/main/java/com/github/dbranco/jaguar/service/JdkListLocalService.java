@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -19,15 +20,16 @@ public class JdkListLocalService implements JdkListService<String> {
     private static final String NO_JDK_LOCALLY_INSTALLED = "There are no JDK locally installed.";
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkListLocalService.class);
 
-    public List<String> list() {
-        Path jdkInstallations = Path.of("jdkInstallations");
+    @Autowired
+    private Path jdkInstallationFolder;
 
-        if (!Files.exists(jdkInstallations) || !Files.isDirectory(jdkInstallations)) {
+    public List<String> list() {
+        if (!Files.exists(jdkInstallationFolder) || !Files.isDirectory(jdkInstallationFolder)) {
             return Collections.emptyList();
         }
 
         try {
-            return Files.list(jdkInstallations)
+            return Files.list(jdkInstallationFolder)
                 .filter(aJdkInstallation -> Files.isDirectory(aJdkInstallation))
                 .map(aJdkInstallation -> aJdkInstallation.getFileName().toString())
                 .collect(Collectors.toList());

@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.github.dbranco.jaguar.component.DecompressJdkProcess;
+import com.github.dbranco.jaguar.component.ExtractJdkProcess;
 import com.github.dbranco.jaguar.model.JdkClassification;
 import com.github.dbranco.jaguar.model.JdkClassification.JdkArchive;
 
@@ -34,16 +34,15 @@ public class JdkInstallationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkListRemoteService.class);
     private static final double MEGA_BYTES = Math.pow(1024, 2);
-    private static final String TMP_DIRECTORY = "tmp";
-
-    @Autowired
-    private String appDirectory;
 
     @Autowired
     private JdkListRemoteService remoteList;
 
     @Autowired
-    private DecompressJdkProcess decompressor;
+    private ExtractJdkProcess extractJdkProcess;
+
+    @Autowired
+    private Path jdkTmpFolder;
 
     private boolean matchParameters(JdkClassification theJdkClassification, InstallationParameter theParameters) {
         return theJdkClassification.getOs().equalsIgnoreCase(theParameters.getOs())
@@ -81,7 +80,6 @@ public class JdkInstallationService {
 				AsynchronousFileChannel channel = AsynchronousFileChannel.open(theDestination, optionSet, null);
 				sink.onDispose(() -> closeChannel(channel));
 				DataBufferUtils.write(theSource, channel).subscribe(
-                    // TODO Do some process to update the console output
                     someBufferInput -> {
                         var currentDownloadedSizeMB = currentDownloadedSize.addAndGet(someBufferInput.capacity())/MEGA_BYTES;                        
                         var currentPercentage = Double.valueOf((currentDownloadedSizeMB*100)/theFileSize).intValue();
@@ -97,13 +95,6 @@ public class JdkInstallationService {
 		});
 	}
 
-    private void createTmpFolderIfNeeded() {
-        var aPath = FileSystems.getDefault().getPath(appDirectory, TMP_DIRECTORY);
-        if (!(aPath.toFile().exists() || aPath.toFile().isDirectory())) {
-            aPath.toFile().mkdirs();
-        }
-    }
-
     private void downloadArchive(JdkArchive aArchive) {
         WebClient aClient = WebClient.builder()
             .baseUrl(aArchive.getUrl())
@@ -118,12 +109,11 @@ public class JdkInstallationService {
             .block();
 
         var aDataBuffer = aClient.get().retrieve().bodyToFlux(DataBuffer.class);
-        var aPath = FileSystems.getDefault().getPath(appDirectory, TMP_DIRECTORY, aFileToDownload);
+        var aTmpJdkArchive = FileSystems.getDefault().getPath(jdkTmpFolder.toString(), aFileToDownload);
 
-        createTmpFolderIfNeeded();
-
-        write(aDataBuffer, Double.valueOf(aFileSize).intValue(), aPath)
-            .doAfterTerminate(() -> System.out.println("Extracting the file"))
+        write(aDataBuffer, Double.valueOf(aFileSize).intValue(), aTmpJdkArchive)
+            .doOnTerminate(() -> extractJdkProcess.extract(aTmpJdkArchive.toFile()))
+            .doAfterTerminate(() -> aTmpJdkArchive.toFile().delete())
             .block(); //Creates new file or overwrites exisiting file
     }
 
