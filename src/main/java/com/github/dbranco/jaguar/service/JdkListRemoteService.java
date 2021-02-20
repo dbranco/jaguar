@@ -22,7 +22,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * The service to list the JDKs remotely available.
  */
 @Service
-public class JdkListRemoteService implements JdkListService {
+public class JdkListRemoteService implements JdkListService<JdkClassification> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JdkListRemoteService.class);
 
@@ -33,16 +33,15 @@ public class JdkListRemoteService implements JdkListService {
         listProperties = theJaguarConfigurations.getList();
     }
 
-    public void list() {
-        WebClient client = WebClient.builder().baseUrl(listProperties.getUrl()).build();
+    public List<JdkClassification> list() {
+        WebClient aClient = WebClient.builder().baseUrl(listProperties.getUrl()).build();
 
-        String bodyToMono = client.get().retrieve().bodyToMono(String.class).block();
-
+        String aListJson = aClient.get().retrieve().bodyToMono(String.class).block();
         ObjectMapper objectMapper = new ObjectMapper();
 
         List<JdkClassification> allJdksAvailable = Collections.emptyList();
         try {
-            allJdksAvailable = objectMapper.readValue(bodyToMono, new TypeReference<>() {
+            allJdksAvailable = objectMapper.readValue(aListJson, new TypeReference<>() {
                 @Override
                 public Type getType() {
                     return new ParameterizedTypeReference<List<JdkClassification>>() {
@@ -53,7 +52,12 @@ public class JdkListRemoteService implements JdkListService {
             LOGGER.error("Error while trying to de-serialised the remote list", theCause);
         }
         
-        System.out.println(allJdksAvailable);
+        return allJdksAvailable;
+    }
+    
+    @Override
+    public void print(List<JdkClassification> theOutputToRender) {
+        System.out.println(theOutputToRender);
     }
     
 }

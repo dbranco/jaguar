@@ -10,12 +10,17 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
-@Command(name = "list", aliases = {
-        "ls" }, description = "[available] List the JDK installations. Type \"available\" at the end to see what can be installed.")
+@Command(name = "list",
+        aliases = {"ls" },
+        description = "[available] List the JDK installations. Type \"available\" at the end to see what can be installed."
+        )
 @Component
 public class JaguarList implements Runnable {
 
-    @Parameters(defaultValue = "", description = "The listing type. \"Availabe\" is used to list the remote available JDKs.")
+    private static final String REMOTE_TYPE = "available";
+    private static final String LOCAL_TYPE = "";
+
+    @Parameters(defaultValue = LOCAL_TYPE, description = "The listing type. \"Availabe\" is used to list the remote available JDKs.")
     private String type;
 
     @Autowired
@@ -25,12 +30,11 @@ public class JaguarList implements Runnable {
     private JdkListRemoteService remote;
 
     public void run() {
-
-        if ("".equalsIgnoreCase(type)) {
-            local.list();
+        if (LOCAL_TYPE.equalsIgnoreCase(type)) {
+            local.listAndPrint();
             return;
-        } else if ("available".equalsIgnoreCase(type)) {
-            remote.list();
+        } else if (REMOTE_TYPE.equalsIgnoreCase(type)) {
+            remote.listAndPrint();
             return;
         }
 
